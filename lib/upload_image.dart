@@ -1,6 +1,7 @@
 import 'dart:io';
+import 'dart:io' as io;
 
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
@@ -26,10 +27,41 @@ class _UploadImageToFirebaseState extends State<UploadImageToFirebase> {
 
   Future uploadImageToFirebase(BuildContext context) async {
     String fileName = basename(_imageFile!.path);
-    // FirebaseStorage ref =
-    Reference ref =
-        FirebaseStorage.instance.ref().child('uploads').child('/$fileName');
+    firebase_storage.Reference ref = firebase_storage.FirebaseStorage.instance
+        .ref()
+        .child('uploads')
+        .child('/$fileName');
+
+    final metadata = firebase_storage.SettableMetadata(
+        contentType: 'image/jpeg',
+        customMetadata: {'picked-file-path': fileName});
+    firebase_storage.UploadTask uploadTask;
+    //late StorageUploadTask uploadTask = firebaseStorageRef.putFile(_imageFile);
+    uploadTask = ref.putFile(io.File(_imageFile!.path), metadata);
+
+    firebase_storage.UploadTask task = await Future.value(uploadTask);
+    Future.value(uploadTask)
+        .then((value) => {print("Upload file path ${value.ref.fullPath}")})
+        .onError((error, stackTrace) =>
+            {print("Upload file path error ${error.toString()} ")});
   }
+
+  // Future uploadImageToFirebase(BuildContext context) async {
+  //   String fileName = basename(_imageFile!.path);
+  //   FirebaseStorage storage = FirebaseStorage.instance;
+  //   Reference ref = storage.ref().child('uploads').child('/$fileName');
+
+  // Reference ref =
+  //     FirebaseStorage.instance.ref().child('uploads').child('/$fileName');
+
+  // StorageReference firebaseStorageRef =
+  //     FirebaseStorage.instance.ref().child('uploads/$fileName');
+  // StorageUploadTask uploadTask = firebaseStorageRef.putFile(_imageFile);
+  // StorageTaskSnapshot taskSnapshot = await uploadTask.onComplete;
+  // taskSnapshot.ref.getDownloadURL().then(
+  //       (value) => print("Done: $value"),
+  //     );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -112,8 +144,8 @@ class _UploadImageToFirebaseState extends State<UploadImageToFirebase> {
                 ),
                 borderRadius: BorderRadius.circular(30.0)),
             child: FlatButton(
-              // onPressed: () => uploadImageToFirebase(context),
-              onPressed: () {},
+              onPressed: () => uploadImageToFirebase(context),
+              // onPressed: () {},
               child: const Text(
                 "Upload Image",
                 style: TextStyle(fontSize: 20, color: Colors.white),
